@@ -9,46 +9,49 @@
   <title>メギド72履歴書メーカー</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <script>
+  </script>
   <link href="https://fonts.googleapis.com/css2?family=Kosugi+Maru&display=swap" rel="stylesheet">
-  <link
-    href="https://fonts.googleapis.com/css2?family=Mochiy+Pop+P+One&display=swap&text=%E3%83%A1%E3%82%AE%E3%83%89%E5%B1%A5%E6%AD%B4%E6%9B%B8"
-    rel="stylesheet">
-  <link
-    href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&display=swap&text=%E4%BD%9C%E6%88%90%E6%97%A5%3A%2F0123456789"
-    rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.min.css">
   <script src="./maker.js"></script>
+  <style>
+   #name, #comment, h1{
+      font-family: 'Kosugi Maru';
+    } 
+  </style>
 </head>
 
 <body>
-  <h1>メギド履歴書メーカー</h1>
-  <div>
-    使い方: 項目を埋めて一番下の「これで確定」を押して下さい。意見、要望、不具合報告は <a href='https://twitter.com/megido72_resume'>@megido72_resume</a>まで。<br>
-    注意: 現状iPhoneでTwitterからのリンクを通して開いた場合うまく画像をダウンロードできないみたいです。右上のコンパスみたいなアイコンでSafariに切り替えられるのでしばらくはそれを試して下さい。
+  <div class="container">
+    <div class="row"><h1>メギド履歴書メーカー</h1></div>
+    <div class="row">
+      使い方: 項目を埋めて一番下の「これで確定」を押して下さい。意見、要望、不具合報告は <a href='https://twitter.com/megido72_resume'>@megido72_resume</a>まで。<br>
+    </div>
   </div>
+  <hr>
   <div class="container">
     <div class="row">
       <label>
         <span>名前</span>
-        <input type="text" id="name">
+        <input type="text" id="name" size="40">
       </label>
     </div>
     <div class="row">
       <label>
         <span>メギド所持数</span>
-        <input type="number" id="howmany_megido">
+        <input type="number" id="howmany_megido" min="0" max="9999">
       </label>
     </div>
     <div class="row">
       <label>
         <span>メギド星6数</span>
-        <input type="number" id="howmany_sixstar">
+        <input type="number" id="howmany_sixstar" min="0" max="9999">
       </label>
     </div>
     <div class="row">
       <label>
         <span>プレイヤーレベル</span>
-        <input type="number" id="player_level">
+        <input type="number" id="player_level" min="0" max="9999">
       </label>
     </div>
     <div class="row">
@@ -140,8 +143,8 @@
       <div><label><input type="checkbox" id="contents_main"><span class="label-body">メインストーリー</span></label></div>
       <div><label><input type="checkbox" id="contents_event"><span class="label-body">イベントストーリー</span></label></div>
       <div><label><input type="checkbox" id="contents_pvp"><span class="label-body">コロシアム(PvP)</span></label></div>
-      <div><label><input type="checkbox" id="contents_daigen"><span class="label-body">大幻獣討伐</span></label></div>
-      <div><label><input type="checkbox" id="contents_gacha"><span class="label-body">ガチャ</span></label></div>
+      <div><label><input type="checkbox" id="contents_daigen"><span class="label-body">大幻獣討伐(星間の禁域)</span></label></div>
+      <div><label><input type="checkbox" id="contents_gacha"><span class="label-body">ガチャ(召喚)</span></label></div>
       <div><label><input type="checkbox" id="contents_chara"><span class="label-body">キャラストーリー</span></label></div>
       <div><label><input type="checkbox" id="contents_reiho"><span class="label-body">霊宝作り</span></label></div>
       <div><label><input type="checkbox" id="contents_raid"><span class="label-body">共襲</span></label></div>
@@ -149,7 +152,7 @@
     <div class="row">
       <label>
         <span>コメント</span>
-        <input type="text" id="comment">
+        <input type="text" id="comment" size="40">
       </label>
     </div>
     <div class="row">
@@ -170,16 +173,19 @@
       </label>
     </div>
   </div>
-  <div style="position: relative;">
-    <canvas id="megido_back" width="1400" height="700"
+  <div id="canvas_container" style="position: relative; width: 100%;">
+    <canvas id="megido_back" width="549" height="606"
       style="position: absolute; left: 0; top: 0; z-index: 0;"></canvas>
-    <canvas id="megido_front" width="1400" height="700"
+    <canvas id="megido_front" width="549" height="606"
       style="position: absolute; left: 0; top: 0; z-index: 1;"></canvas>
-    <canvas id="megido_overlay" width="1400" height="700"
+    <canvas id="megido_overlay" width="549" height="606"
       style="position: absolute; left: 0; top: 0; z-index: 2;"></canvas>
   </div>
-  <div style="position: relative; margin-top: 710px; padding-bottom: 50px">
-    <button id="gen_image">これで確定</button>
+  <div style="text-align: center; position: relative; margin-top: 616px; padding-bottom: 72px">
+    <div><button id="gen_image">これで確定</button></div>
+
+    <div style="display: none;" id="gen_image_description">この下の画像を長押しか右クリックで保存して、
+    必要ならば「<span style="user-select: all;">#メギド72 #メギド履歴書 #メギドクラスタと繋がりたい</span>」をつけてツイートして下さい。</div>
     <div id="image_result"></div>
   </div>
 </body>

@@ -38,7 +38,7 @@ function drawText(txt, x, y, w, h, isSubset = true, target = DrawTarget.HiddenFr
         ctx.fillText(txt, x + w / 2, y + h / 2);
     };
     if (isSubset) {
-        const font = new FontFace('Kosugi Maru Subset', 'url(/img/Kosugi-Maru-Subset.woff2)');
+        const font = new FontFace("Kosugi Maru Subset", "url(/img/Kosugi-Maru-Subset.woff2)");
         font.load().then(()=>{
             document.fonts.add(font);
             doIt("Kosugi Maru Subset");
@@ -278,6 +278,11 @@ document.addEventListener("DOMContentLoaded", ()=>{
             const url = URL.createObjectURL(blob);
             newImg.src = url;
             newImg.alt = "メギド履歴書";
+            const curWidth = document.querySelector("#canvas_container").offsetWidth;
+            if (curWidth < 1400) {
+                newImg.width = curWidth;
+                newImg.height = curWidth / 2;
+            }
             const el_result = document.getElementById("image_result");
             el_result.querySelectorAll("img").forEach((el)=>{
                 el.parentNode.removeChild(el);

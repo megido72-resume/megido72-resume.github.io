@@ -232,7 +232,12 @@ document.addEventListener("DOMContentLoaded", ()=>{
         showMegidoAsImg();
     });
     Utils.addChangeListener("#megido_image", (target)=>{
-        const fileData = target.files[0];
+        if (!target.files?.length) {
+            return;
+        }
+        const fileData = target.files?.item(0);
+        const txtElem = document.querySelector("#megido_image_txt");
+        txtElem.innerText = fileData.name.substring(0, 8);
         const reader = new FileReader();
         reader.onload = ()=>{
             const ctx = MEGIDO_FRONT.getContext("2d");

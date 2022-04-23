@@ -8,12 +8,18 @@ class Utils {
         return document.querySelector(selector).getContext("2d");
     }
 }
-const HIDDEN_FRONT = document.createElement("canvas");
-HIDDEN_FRONT.width = 1400;
-HIDDEN_FRONT.height = 700;
-const HIDDEN_BACK = document.createElement("canvas");
-HIDDEN_BACK.width = 1400;
-HIDDEN_BACK.height = 700;
+const FULL_WIDTH = 1400;
+function createCanvas(width, height) {
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    return canvas;
+}
+const HIDDEN_FRONT = createCanvas(1400, 700);
+const HIDDEN_BACK = createCanvas(1400, 700);
+const MEGIDO_BACK = createCanvas(549, 606);
+const MEGIDO_FRONT = createCanvas(549, 606);
+const MEGIDO_OVERLAY = createCanvas(549, 606);
 const MEGIDO_EN = new Map();
 const MEGIDO_TABLE = new Map();
 var DrawTarget;
@@ -22,30 +28,53 @@ var DrawTarget;
     DrawTarget1[DrawTarget1["RevealedFront"] = 1] = "RevealedFront";
 })(DrawTarget || (DrawTarget = {
 }));
-function drawText(txt, x, y, w, h, isSubset = true, target = DrawTarget.HiddenFront) {
-    const doIt = (fontFamily)=>{
-        let ctx;
-        if (target == DrawTarget.HiddenFront) {
-            ctx = HIDDEN_FRONT.getContext("2d");
+async function drawText(txt, x, y, w, h, isSubset = true, target = DrawTarget.HiddenFront) {
+    const fontFamily = await new Promise((resolve, _)=>{
+        if (isSubset) {
+            const font = new FontFace("Kosugi Maru Subset", "url(/img/Kosugi-Maru-Subset.woff2)");
+            font.load().then(()=>{
+                document.fonts.add(font);
+                resolve("Kosugi Maru Subset");
+            });
         } else {
-            ctx = Utils.canvasContext("#megido_front");
+            resolve("Kosugi Maru");
         }
-        ctx.clearRect(x - 2, y - 2, w + 2 * 2, h + 2 * 2);
-        ctx.font = h + `px '${fontFamily}'`;
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillStyle = "white";
-        ctx.fillText(txt, x + w / 2, y + h / 2);
-    };
-    if (isSubset) {
-        const font = new FontFace("Kosugi Maru Subset", "url(/img/Kosugi-Maru-Subset.woff2)");
-        font.load().then(()=>{
-            document.fonts.add(font);
-            doIt("Kosugi Maru Subset");
-        });
+    });
+    let ctx;
+    if (target == DrawTarget.HiddenFront) {
+        ctx = HIDDEN_FRONT.getContext("2d");
     } else {
-        doIt("Kosugi Maru");
+        ctx = MEGIDO_FRONT.getContext("2d");
     }
+    ctx.clearRect(x - 2, y - 2, w + 2 * 2, h + 2 * 2);
+    ctx.font = h + `px '${fontFamily}'`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = "white";
+    ctx.fillText(txt, x + w / 2, y + h / 2);
+}
+function showMegidoAsImg() {
+    const canvas = createCanvas(549, 606);
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(MEGIDO_BACK, 0, 0);
+    ctx.drawImage(MEGIDO_FRONT, 0, 0);
+    ctx.drawImage(MEGIDO_OVERLAY, 0, 0);
+    return new Promise((resolve, reject)=>{
+        canvas.toBlob((blob)=>{
+            if (!blob) {
+                alert("Error: canvas.toBlob cannot create image");
+                reject();
+            } else {
+                const img = document.getElementById("megido_img");
+                const url = URL.createObjectURL(blob);
+                img.onload = ()=>{
+                    URL.revokeObjectURL(url);
+                };
+                img.src = url;
+                resolve();
+            }
+        });
+    });
 }
 function drawHeader() {
     const ctx = HIDDEN_FRONT.getContext("2d");
@@ -183,29 +212,30 @@ document.addEventListener("DOMContentLoaded", ()=>{
             }
         });
     });
-    Utils.addChangeListener("#megidral", (target)=>{
-        const ctx = Utils.canvasContext("#megido_overlay");
+    async function drawMegidoral(txt) {
+        const ctx = MEGIDO_OVERLAY.getContext("2d");
         const h = 32;
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
         if (!document.querySelector("#enable_megidoral").checked) {
             return;
         }
-        const font = new FontFace("Megidral", "url(/img/Megidral-Regular.ttf)");
-        font.load().then((fnt)=>{
-            document.fonts.add(fnt);
-            const txt = target.value;
-            ctx.font = h + "px 'Megidral'";
-            ctx.textAlign = "right";
-            ctx.textBaseline = "top";
-            ctx.fillStyle = "#CCCCCCDD";
-            ctx.fillText(txt, 538, 11);
-        });
+        const font = await new FontFace("Megidral", "url(/img/Megidral-Regular.ttf)").load();
+        document.fonts.add(font);
+        ctx.font = h + "px 'Megidral'";
+        ctx.textAlign = "right";
+        ctx.textBaseline = "top";
+        ctx.fillStyle = "#CCCCCCDD";
+        ctx.fillText(txt, 538, 11);
+    }
+    Utils.addChangeListener("#megidral", async (target)=>{
+        await drawMegidoral(target.value);
+        showMegidoAsImg();
     });
     Utils.addChangeListener("#megido_image", (target)=>{
         const fileData = target.files[0];
         const reader = new FileReader();
         reader.onload = ()=>{
-            const ctx = Utils.canvasContext("#megido_front");
+            const ctx = MEGIDO_FRONT.getContext("2d");
             ctx.clearRect(6, 6, 537, 537);
             const img = new Image();
             img.src = reader.result;
@@ -228,6 +258,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
                     sh = h;
                 }
                 ctx.drawImage(img, sx, sy, sw, sh, 6, 6, 537, 537);
+                showMegidoAsImg();
             };
         };
         reader.readAsDataURL(fileData);
@@ -236,38 +267,42 @@ document.addEventListener("DOMContentLoaded", ()=>{
         const meg = document.querySelector("#megidral");
         meg.dispatchEvent(new Event("change"));
     });
-    Utils.addChangeListener("#recommend_megido", (target)=>{
-        const meg = document.querySelector("#megidral");
+    Utils.addChangeListener("#recommend_megido", async (target)=>{
         const name = MEGIDO_TABLE.get(target.value);
         const en_name = MEGIDO_EN.get(name) || "";
-        meg.value = en_name;
-        meg.dispatchEvent(new Event("change"));
-        drawText(name, 150, 555, 380, 32, true, DrawTarget.RevealedFront);
-        const bg = new Image();
-        bg.setAttribute("crossorigin", "anonymous");
-        bg.src = "/character/character_bg.jpg";
-        const ctx = Utils.canvasContext("#megido_front");
-        bg.onload = ()=>{
-            ctx.clearRect(6, 6, 537, 537);
-            ctx.drawImage(bg, 6, 6, 537, 537);
-            const img = new Image();
-            img.setAttribute("crossorigin", "anonymous");
-            img.src = "/character/" + target.value + ".png";
-            img.onload = ()=>{
-                ctx.drawImage(img, 31, 36, 500, 500);
+        document.querySelector("#megidral").value = en_name;
+        const imgPromise = new Promise((resolve, _)=>{
+            const bg = new Image();
+            bg.setAttribute("crossorigin", "anonymous");
+            bg.src = "/character/character_bg.jpg";
+            const ctx = MEGIDO_FRONT.getContext("2d");
+            bg.onload = ()=>{
+                ctx.clearRect(6, 6, 537, 537);
+                ctx.drawImage(bg, 6, 6, 537, 537);
+                const img = new Image();
+                img.setAttribute("crossorigin", "anonymous");
+                img.src = "/character/" + target.value + ".png";
+                img.onload = ()=>{
+                    ctx.drawImage(img, 31, 36, 500, 500);
+                    resolve();
+                };
             };
-        };
+        });
+        await Promise.all([
+            drawMegidoral(en_name),
+            drawText(name, 150, 555, 380, 32, true, DrawTarget.RevealedFront),
+            imgPromise, 
+        ]);
+        showMegidoAsImg();
     });
     document.querySelector("#gen_image").addEventListener("click", (_)=>{
-        const canvas = document.createElement("canvas");
-        canvas.width = 1400;
-        canvas.height = 700;
+        const canvas = createCanvas(1400, 700);
         const ctx = canvas.getContext("2d");
         ctx.drawImage(HIDDEN_BACK, 0, 0);
         ctx.drawImage(HIDDEN_FRONT, 0, 0);
-        ctx.drawImage(document.querySelector("#megido_back"), 22, 77);
-        ctx.drawImage(document.querySelector("#megido_front"), 22, 77);
-        ctx.drawImage(document.querySelector("#megido_overlay"), 22, 77);
+        ctx.drawImage(MEGIDO_BACK, 22, 77);
+        ctx.drawImage(MEGIDO_FRONT, 22, 77);
+        ctx.drawImage(MEGIDO_OVERLAY, 22, 77);
         document.querySelector("#gen_image_description").style.display = "block";
         canvas.toBlob((blob)=>{
             if (!blob) {
@@ -278,11 +313,9 @@ document.addEventListener("DOMContentLoaded", ()=>{
             const url = URL.createObjectURL(blob);
             newImg.src = url;
             newImg.alt = "メギド履歴書";
-            const curWidth = document.querySelector("#canvas_container").offsetWidth;
-            if (curWidth < 1400) {
-                newImg.width = curWidth;
-                newImg.height = curWidth / 2;
-            }
+            newImg.style.width = "100%";
+            newImg.style.height = "auto";
+            newImg.style.maxWidth = `${FULL_WIDTH}px`;
             const el_result = document.getElementById("image_result");
             el_result.querySelectorAll("img").forEach((el)=>{
                 el.parentNode.removeChild(el);
@@ -292,7 +325,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
     });
     document.querySelectorAll("#favorite_contents input[type='checkbox']").forEach((item)=>{
         item.addEventListener("change", (ev)=>{
-            const ctx2 = Utils.canvasContext("#megido_front");
+            const ctx2 = MEGIDO_FRONT.getContext("2d");
             const doCheck = (ctx, x, y)=>{
                 const img = new Image();
                 img.src = "/img/checkbox.png";
@@ -362,32 +395,10 @@ document.addEventListener("DOMContentLoaded", ()=>{
             }
         });
     });
-    const container = document.querySelector("#canvas_container");
-    const calcLeft = (canvas)=>{
-        const x = (container.clientWidth - canvas.width) / 2;
-        if (x < 0) {
-            return "0px";
-        } else {
-            return `${x}px`;
-        }
-    };
-    const alignCenter = ()=>{
-        [
-            "#megido_back",
-            "#megido_front",
-            "#megido_overlay"
-        ].forEach((selector)=>{
-            const canvas = document.querySelector(selector);
-            canvas.style.left = calcLeft(canvas);
-        });
-    };
-    alignCenter();
-    const resizeObserver = new ResizeObserver(alignCenter);
-    resizeObserver.observe(container);
     const img1 = new Image();
     img1.src = "/img/recommend_bg.png";
     img1.onload = ()=>{
-        const ctx = Utils.canvasContext("#megido_back");
+        const ctx = MEGIDO_BACK.getContext("2d");
         ctx.drawImage(img1, 0, 0, img1.width, img1.height);
     };
     const hiddenBg = new Image();

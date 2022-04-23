@@ -236,8 +236,10 @@ document.addEventListener("DOMContentLoaded", ()=>{
             return;
         }
         const fileData = target.files?.item(0);
-        const txtElem = document.querySelector("#megido_image_txt");
-        txtElem.innerText = fileData.name.substring(0, 8);
+        if (fileData.name) {
+            const txtElem = document.querySelector("#megido_image_txt");
+            txtElem.innerText = fileData.name.substring(0, 8);
+        }
         const reader = new FileReader();
         reader.onload = ()=>{
             const ctx = MEGIDO_FRONT.getContext("2d");
@@ -276,28 +278,33 @@ document.addEventListener("DOMContentLoaded", ()=>{
         const name = MEGIDO_TABLE.get(target.value);
         const en_name = MEGIDO_EN.get(name) || "";
         document.querySelector("#megidral").value = en_name;
-        const imgPromise = new Promise((resolve, _)=>{
-            const bg = new Image();
-            bg.setAttribute("crossorigin", "anonymous");
-            bg.src = "/character/character_bg.jpg";
-            const ctx = MEGIDO_FRONT.getContext("2d");
-            bg.onload = ()=>{
-                ctx.clearRect(6, 6, 537, 537);
-                ctx.drawImage(bg, 6, 6, 537, 537);
-                const img = new Image();
-                img.setAttribute("crossorigin", "anonymous");
-                img.src = "/character/" + target.value + ".png";
-                img.onload = ()=>{
-                    ctx.drawImage(img, 31, 36, 500, 500);
-                    resolve();
+        if (target.value) {
+            const imgPromise = new Promise((resolve, _)=>{
+                const bg = new Image();
+                bg.setAttribute("crossorigin", "anonymous");
+                bg.src = "/character/character_bg.jpg";
+                const ctx = MEGIDO_FRONT.getContext("2d");
+                bg.onload = ()=>{
+                    ctx.clearRect(6, 6, 537, 537);
+                    ctx.drawImage(bg, 6, 6, 537, 537);
+                    const img = new Image();
+                    img.setAttribute("crossorigin", "anonymous");
+                    img.src = "/character/" + target.value + ".png";
+                    img.onload = ()=>{
+                        ctx.drawImage(img, 31, 36, 500, 500);
+                        resolve();
+                    };
                 };
-            };
-        });
-        await Promise.all([
-            drawMegidoral(en_name),
-            drawText(name, 150, 555, 380, 32, true, DrawTarget.RevealedFront),
-            imgPromise, 
-        ]);
+            });
+            await Promise.all([
+                drawMegidoral(en_name),
+                drawText(name, 150, 555, 380, 32, true, DrawTarget.RevealedFront),
+                imgPromise, 
+            ]);
+        } else {
+            MEGIDO_FRONT.getContext("2d")?.clearRect(0, 0, 549, 606);
+            MEGIDO_OVERLAY.getContext("2d")?.clearRect(0, 0, 549, 606);
+        }
         showMegidoAsImg();
     });
     document.querySelector("#gen_image").addEventListener("click", (_)=>{

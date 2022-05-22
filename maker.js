@@ -23,13 +23,21 @@ const HIDDEN_FRONT = createCanvas(1400, 700);
 const HIDDEN_BACK = createCanvas(1400, 700);
 const MEGIDO_BACK = createCanvas(549, 606);
 const MEGIDO_FRONT = createCanvas(549, 606);
+const MEGIDO_THUMB = createCanvas(549, 606);
 const MEGIDO_OVERLAY = createCanvas(549, 606);
 const MEGIDO_EN = new Map();
 const MEGIDO_TABLE = new Map();
+var ShowState;
+(function(ShowState1) {
+    ShowState1[ShowState1["MegidoFront"] = 0] = "MegidoFront";
+    ShowState1[ShowState1["MegidoThumb"] = 1] = "MegidoThumb";
+})(ShowState || (ShowState = {}));
+let MEGIDO_SHOW_STATE = ShowState.MegidoFront;
+let CAN_I_USE_WEBP = true;
 var DrawTarget;
 (function(DrawTarget1) {
     DrawTarget1[DrawTarget1["HiddenFront"] = 0] = "HiddenFront";
-    DrawTarget1[DrawTarget1["RevealedFront"] = 1] = "RevealedFront";
+    DrawTarget1[DrawTarget1["MegidoOverlay"] = 1] = "MegidoOverlay";
 })(DrawTarget || (DrawTarget = {}));
 async function drawText(txt, x, y, w, h, isSubset = true, target = DrawTarget.HiddenFront) {
     const fontFamily = await new Promise((resolve, _)=>{
@@ -47,7 +55,7 @@ async function drawText(txt, x, y, w, h, isSubset = true, target = DrawTarget.Hi
     if (target == DrawTarget.HiddenFront) {
         ctx = HIDDEN_FRONT.getContext("2d");
     } else {
-        ctx = MEGIDO_FRONT.getContext("2d");
+        ctx = MEGIDO_OVERLAY.getContext("2d");
     }
     ctx.clearRect(x - 2, y - 2, w + 2 * 2, h + 2 * 2);
     ctx.font = h + `px '${fontFamily}'`;
@@ -60,7 +68,11 @@ function showMegidoAsImg() {
     const canvas = createCanvas(549, 606);
     const ctx = canvas.getContext("2d");
     ctx.drawImage(MEGIDO_BACK, 0, 0);
-    ctx.drawImage(MEGIDO_FRONT, 0, 0);
+    if (MEGIDO_SHOW_STATE == ShowState.MegidoThumb) {
+        ctx.drawImage(MEGIDO_THUMB, 0, 0);
+    } else {
+        ctx.drawImage(MEGIDO_FRONT, 0, 0);
+    }
     ctx.drawImage(MEGIDO_OVERLAY, 0, 0);
     return new Promise((resolve, reject)=>{
         canvas.toBlob((blob)=>{
@@ -99,7 +111,7 @@ function drawHeader() {
         ctx.fillText(createdAt, 1370, 65);
     });
 }
-document.addEventListener("DOMContentLoaded", ()=>{
+function simpleChangeListeners() {
     Utils.addChangeListener("#name", (target)=>{
         drawText(target.value, 700, 103, 600, 32, false);
     });
@@ -143,6 +155,8 @@ document.addEventListener("DOMContentLoaded", ()=>{
         ctx.arc(x, 230, 22, 0, 2 * Math.PI);
         ctx.stroke();
     });
+}
+function favoriteContentListener() {
     document.querySelectorAll("#favorite_contents input[type='checkbox']").forEach(function(item) {
         item.addEventListener("change", function(ev) {
             const ctx1 = HIDDEN_FRONT.getContext("2d");
@@ -215,10 +229,49 @@ document.addEventListener("DOMContentLoaded", ()=>{
             }
         });
     });
+}
+function drawMegidoFront(stem) {
+    return new Promise((resolve, _)=>{
+        const bg = new Image();
+        bg.setAttribute("crossorigin", "anonymous");
+        bg.src = "/character/character_bg.jpg";
+        const ctx = MEGIDO_FRONT.getContext("2d");
+        bg.onload = ()=>{
+            ctx.clearRect(6, 6, 537, 537);
+            ctx.drawImage(bg, 6, 6, 537, 537);
+            if (stem) {
+                const img = new Image();
+                img.setAttribute("crossorigin", "anonymous");
+                img.src = `/character/${stem}.png`;
+                img.onload = ()=>{
+                    ctx.drawImage(img, 21, 21, 520, 520);
+                    resolve();
+                };
+            } else {
+                resolve();
+            }
+        };
+    });
+}
+function drawMegidoThumb(stem) {
+    return new Promise((resolve, _)=>{
+        const ctx = MEGIDO_THUMB.getContext("2d");
+        const img = new Image();
+        img.setAttribute("crossorigin", "anonymous");
+        const ft = CAN_I_USE_WEBP ? "webp" : "jpg";
+        img.src = `/thumbnail/${stem}.${ft}`;
+        img.onload = ()=>{
+            ctx.clearRect(6, 6, 537, 537);
+            ctx.drawImage(img, 6, 6, 537, 537);
+            resolve();
+        };
+    });
+}
+function drawMegidoListener() {
     async function drawMegidoral(txt) {
         const ctx = MEGIDO_OVERLAY.getContext("2d");
         const h = 32;
-        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        ctx.clearRect(0, 0, ctx.canvas.width, 550);
         if (!document.querySelector("#enable_megidoral").checked) {
             return;
         }
@@ -269,6 +322,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
                     sh = h;
                 }
                 ctx.drawImage(img, sx, sy, sw, sh, 6, 6, 537, 537);
+                MEGIDO_SHOW_STATE = ShowState.MegidoFront;
                 showMegidoAsImg();
             };
         };
@@ -279,7 +333,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
         meg.dispatchEvent(new Event("change"));
     });
     async function drawMegidoName(name, isSubset) {
-        await drawText(name, 150, 555, 380, 32, isSubset, DrawTarget.RevealedFront);
+        await drawText(name, 150, 555, 380, 32, isSubset, DrawTarget.MegidoOverlay);
     }
     Utils.addChangeListener("#recommend_megido_name", async (el)=>{
         await drawMegidoName(el.value, false);
@@ -291,41 +345,38 @@ document.addEventListener("DOMContentLoaded", ()=>{
         document.querySelector("#megidral").value = en_name;
         document.querySelector("#recommend_megido_name").value = name;
         if (target.value) {
-            const imgPromise = new Promise((resolve, _)=>{
-                const bg = new Image();
-                bg.setAttribute("crossorigin", "anonymous");
-                bg.src = "/character/character_bg.jpg";
-                const ctx = MEGIDO_FRONT.getContext("2d");
-                bg.onload = ()=>{
-                    ctx.clearRect(6, 6, 537, 537);
-                    ctx.drawImage(bg, 6, 6, 537, 537);
-                    const img = new Image();
-                    img.setAttribute("crossorigin", "anonymous");
-                    img.src = `/character/${target.value}.png`;
-                    img.onload = ()=>{
-                        ctx.drawImage(img, 21, 21, 520, 520);
-                        resolve();
-                    };
-                };
-            });
+            const imgPromise = drawMegidoThumb(target.value);
             await Promise.all([
                 drawMegidoral(en_name),
                 drawMegidoName(name, true),
                 imgPromise, 
             ]);
         } else {
-            MEGIDO_FRONT.getContext("2d")?.clearRect(0, 0, 549, 606);
+            MEGIDO_THUMB.getContext("2d")?.clearRect(0, 0, 549, 606);
             MEGIDO_OVERLAY.getContext("2d")?.clearRect(0, 0, 549, 606);
         }
+        MEGIDO_SHOW_STATE = ShowState.MegidoThumb;
         showMegidoAsImg();
     });
+}
+function bottomButtonListener() {
     document.querySelector("#toggle_detail_conf").addEventListener("click", (_)=>{
         const el = document.querySelector("#detail_conf");
         el.classList.toggle("d-none");
     });
-    document.querySelector("#gen_image").addEventListener("click", (_)=>{
+    document.querySelector("#gen_image").addEventListener("click", async (_)=>{
         const canvas = createCanvas(1400, 700);
         const ctx = canvas.getContext("2d");
+        let promise = null;
+        if (MEGIDO_SHOW_STATE == ShowState.MegidoThumb) {
+            const stem = document.querySelector("#recommend_megido").value;
+            promise = drawMegidoFront(stem);
+        } else {
+            promise = new Promise((resolve, _)=>{
+                resolve();
+            });
+        }
+        await promise;
         ctx.drawImage(HIDDEN_BACK, 0, 0);
         ctx.drawImage(HIDDEN_FRONT, 0, 0);
         ctx.drawImage(MEGIDO_BACK, 22, 77);
@@ -351,83 +402,13 @@ document.addEventListener("DOMContentLoaded", ()=>{
             el_result.appendChild(newImg);
         });
     });
-    document.querySelectorAll("#favorite_contents input[type='checkbox']").forEach((item)=>{
-        item.addEventListener("change", (ev)=>{
-            const ctx2 = MEGIDO_FRONT.getContext("2d");
-            const doCheck = (ctx, x, y)=>{
-                const img = new Image();
-                img.src = "/img/checkbox.png";
-                img.onload = ()=>{
-                    ctx.drawImage(img, x, y, 35, 35);
-                };
-            };
-            const target = ev.target;
-            const checked = target.checked;
-            switch(target.id){
-                case "contents_main":
-                    if (checked) {
-                        doCheck(ctx2, 865, 436);
-                    } else {
-                        ctx2.clearRect(865, 436, 35, 35);
-                    }
-                    break;
-                case "contents_event":
-                    if (checked) {
-                        doCheck(ctx2, 1115, 436);
-                    } else {
-                        ctx2.clearRect(1115, 436, 35, 35);
-                    }
-                    break;
-                case "contents_pvp":
-                    if (checked) {
-                        doCheck(ctx2, 865, 466);
-                    } else {
-                        ctx2.clearRect(865, 466, 35, 35);
-                    }
-                    break;
-                case "contents_daigen":
-                    if (checked) {
-                        doCheck(ctx2, 1115, 466);
-                    } else {
-                        ctx2.clearRect(1115, 466, 35, 35);
-                    }
-                    break;
-                case "contents_gacha":
-                    if (checked) {
-                        doCheck(ctx2, 865, 501);
-                    } else {
-                        ctx2.clearRect(865, 501, 35, 35);
-                    }
-                    break;
-                case "contents_chara":
-                    if (checked) {
-                        doCheck(ctx2, 1115, 500);
-                    } else {
-                        ctx2.clearRect(1115, 500, 35, 35);
-                    }
-                    break;
-                case "contents_reiho":
-                    if (checked) {
-                        doCheck(ctx2, 865, 536);
-                    } else {
-                        ctx2.clearRect(865, 536, 35, 35);
-                    }
-                    break;
-                case "contents_raid":
-                    if (checked) {
-                        doCheck(ctx2, 1115, 533);
-                    } else {
-                        ctx2.clearRect(1115, 533, 35, 35);
-                    }
-                    break;
-            }
-        });
-    });
-    const img1 = new Image();
-    img1.src = "/img/recommend_bg.png";
-    img1.onload = ()=>{
+}
+function startUp() {
+    const img = new Image();
+    img.src = "/img/recommend_bg.png";
+    img.onload = ()=>{
         const ctx = MEGIDO_BACK.getContext("2d");
-        ctx.drawImage(img1, 0, 0, img1.width, img1.height);
+        ctx.drawImage(img, 0, 0, img.width, img.height);
     };
     const hiddenBg = new Image();
     hiddenBg.src = "/img/template.png";
@@ -483,9 +464,40 @@ document.addEventListener("DOMContentLoaded", ()=>{
             });
         });
     });
+}
+function colorPicker() {
     const picker = document.querySelector("rgba-string-color-picker");
     picker.addEventListener("color-changed", (_)=>{
         document.querySelector("#megidral").dispatchEvent(new Event("change"));
     });
+}
+function checkWebp(feature) {
+    const kTestImages = {
+        lossy: "UklGRiIAAABXRUJQVlA4IBYAAAAwAQCdASoBAAEADsD+JaQAA3AAAAAA",
+        lossless: "UklGRhoAAABXRUJQVlA4TA0AAAAvAAAAEAcQERGIiP4HAA==",
+        alpha: "UklGRkoAAABXRUJQVlA4WAoAAAAQAAAAAAAAAAAAQUxQSAwAAAARBxAR/Q9ERP8DAABWUDggGAAAABQBAJ0BKgEAAQAAAP4AAA3AAP7mtQAAAA==",
+        animation: "UklGRlIAAABXRUJQVlA4WAoAAAASAAAAAAAAAAAAQU5JTQYAAAD/////AABBTk1GJgAAAAAAAAAAAAAAAAAAAGQAAABWUDhMDQAAAC8AAAAQBxAREYiI/gcA"
+    };
+    const img = new Image();
+    const callback = function(result) {
+        CAN_I_USE_WEBP = result;
+    };
+    img.onload = function() {
+        const result = img.width > 0 && img.height > 0;
+        callback(result);
+    };
+    img.onerror = function() {
+        callback(false);
+    };
+    img.src = "data:image/webp;base64," + kTestImages[feature];
+}
+document.addEventListener("DOMContentLoaded", ()=>{
+    simpleChangeListeners();
+    favoriteContentListener();
+    drawMegidoListener();
+    bottomButtonListener();
+    startUp();
+    colorPicker();
+    checkWebp("lossy");
 });
 

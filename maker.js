@@ -1,3 +1,7 @@
+// deno-fmt-ignore-file
+// deno-lint-ignore-file
+// This code was bundled using `deno bundle` and it's not recommended to edit it manually
+
 class Utils {
     static addChangeListener(selector, callback) {
         document.querySelector(selector).addEventListener("change", function(ev) {
@@ -26,8 +30,7 @@ var DrawTarget;
 (function(DrawTarget1) {
     DrawTarget1[DrawTarget1["HiddenFront"] = 0] = "HiddenFront";
     DrawTarget1[DrawTarget1["RevealedFront"] = 1] = "RevealedFront";
-})(DrawTarget || (DrawTarget = {
-}));
+})(DrawTarget || (DrawTarget = {}));
 async function drawText(txt, x, y, w, h, isSubset = true, target = DrawTarget.HiddenFront) {
     const fontFamily = await new Promise((resolve, _)=>{
         if (isSubset) {
@@ -221,10 +224,11 @@ document.addEventListener("DOMContentLoaded", ()=>{
         }
         const font = await new FontFace("Megidral", "url(/img/Megidral-Regular.ttf)").load();
         document.fonts.add(font);
+        const color = document.querySelector("rgba-string-color-picker").color;
         ctx.font = h + "px 'Megidral'";
         ctx.textAlign = "right";
         ctx.textBaseline = "top";
-        ctx.fillStyle = "#CCCCCCDD";
+        ctx.fillStyle = color;
         ctx.fillText(txt, 538, 11);
     }
     Utils.addChangeListener("#megidral", async (target)=>{
@@ -274,10 +278,18 @@ document.addEventListener("DOMContentLoaded", ()=>{
         const meg = document.querySelector("#megidral");
         meg.dispatchEvent(new Event("change"));
     });
+    async function drawMegidoName(name, isSubset) {
+        await drawText(name, 150, 555, 380, 32, isSubset, DrawTarget.RevealedFront);
+    }
+    Utils.addChangeListener("#recommend_megido_name", async (el)=>{
+        await drawMegidoName(el.value, false);
+        showMegidoAsImg();
+    });
     Utils.addChangeListener("#recommend_megido", async (target)=>{
-        const name = MEGIDO_TABLE.get(target.value);
+        const name = MEGIDO_TABLE.get(target.value) || "";
         const en_name = MEGIDO_EN.get(name) || "";
         document.querySelector("#megidral").value = en_name;
+        document.querySelector("#recommend_megido_name").value = name;
         if (target.value) {
             const imgPromise = new Promise((resolve, _)=>{
                 const bg = new Image();
@@ -289,16 +301,16 @@ document.addEventListener("DOMContentLoaded", ()=>{
                     ctx.drawImage(bg, 6, 6, 537, 537);
                     const img = new Image();
                     img.setAttribute("crossorigin", "anonymous");
-                    img.src = "/character/" + target.value + ".png";
+                    img.src = `/character/${target.value}.png`;
                     img.onload = ()=>{
-                        ctx.drawImage(img, 31, 36, 500, 500);
+                        ctx.drawImage(img, 21, 21, 520, 520);
                         resolve();
                     };
                 };
             });
             await Promise.all([
                 drawMegidoral(en_name),
-                drawText(name, 150, 555, 380, 32, true, DrawTarget.RevealedFront),
+                drawMegidoName(name, true),
                 imgPromise, 
             ]);
         } else {
@@ -306,6 +318,10 @@ document.addEventListener("DOMContentLoaded", ()=>{
             MEGIDO_OVERLAY.getContext("2d")?.clearRect(0, 0, 549, 606);
         }
         showMegidoAsImg();
+    });
+    document.querySelector("#toggle_detail_conf").addEventListener("click", (_)=>{
+        const el = document.querySelector("#detail_conf");
+        el.classList.toggle("d-none");
     });
     document.querySelector("#gen_image").addEventListener("click", (_)=>{
         const canvas = createCanvas(1400, 700);
@@ -315,7 +331,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
         ctx.drawImage(MEGIDO_BACK, 22, 77);
         ctx.drawImage(MEGIDO_FRONT, 22, 77);
         ctx.drawImage(MEGIDO_OVERLAY, 22, 77);
-        document.querySelector("#gen_image_description").style.display = "block";
+        document.querySelector("#gen_image_description").classList.remove("d-none");
         canvas.toBlob((blob)=>{
             if (!blob) {
                 alert("Error: canvas.toBlob cannot create image");
@@ -433,6 +449,22 @@ document.addEventListener("DOMContentLoaded", ()=>{
     fetch("/data/megido_list.json").then((data)=>{
         data.json().then((json)=>{
             const sel = document.querySelector("#recommend_megido");
+            [
+                [
+                    "ソロモン",
+                    "solomon"
+                ],
+                [
+                    "シバの女王",
+                    "sheva"
+                ]
+            ].forEach(([ja, fn])=>{
+                const opt = document.createElement("option");
+                opt.text = ja;
+                opt.value = fn;
+                sel.add(opt);
+                MEGIDO_TABLE.set(fn, ja);
+            });
             json.list.forEach((item)=>{
                 if (item.n) {
                     const opt = document.createElement("option");
@@ -450,6 +482,10 @@ document.addEventListener("DOMContentLoaded", ()=>{
                 }
             });
         });
+    });
+    const picker = document.querySelector("rgba-string-color-picker");
+    picker.addEventListener("color-changed", (_)=>{
+        document.querySelector("#megidral").dispatchEvent(new Event("change"));
     });
 });
 

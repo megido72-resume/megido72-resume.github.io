@@ -28,16 +28,16 @@ const MEGIDO_OVERLAY = createCanvas(549, 606);
 const MEGIDO_EN = new Map();
 const MEGIDO_TABLE = new Map();
 var ShowState;
-(function(ShowState1) {
-    ShowState1[ShowState1["MegidoFront"] = 0] = "MegidoFront";
-    ShowState1[ShowState1["MegidoThumb"] = 1] = "MegidoThumb";
+(function(ShowState) {
+    ShowState[ShowState["MegidoFront"] = 0] = "MegidoFront";
+    ShowState[ShowState["MegidoThumb"] = 1] = "MegidoThumb";
 })(ShowState || (ShowState = {}));
 let MEGIDO_SHOW_STATE = ShowState.MegidoFront;
 let CAN_I_USE_WEBP = true;
 var DrawTarget;
-(function(DrawTarget1) {
-    DrawTarget1[DrawTarget1["HiddenFront"] = 0] = "HiddenFront";
-    DrawTarget1[DrawTarget1["MegidoOverlay"] = 1] = "MegidoOverlay";
+(function(DrawTarget) {
+    DrawTarget[DrawTarget["HiddenFront"] = 0] = "HiddenFront";
+    DrawTarget[DrawTarget["MegidoOverlay"] = 1] = "MegidoOverlay";
 })(DrawTarget || (DrawTarget = {}));
 async function drawText(txt, x, y, w, h, isSubset = true, target = DrawTarget.HiddenFront) {
     const fontFamily = await new Promise((resolve, _)=>{
@@ -159,7 +159,7 @@ function simpleChangeListeners() {
 function favoriteContentListener() {
     document.querySelectorAll("#favorite_contents input[type='checkbox']").forEach(function(item) {
         item.addEventListener("change", function(ev) {
-            const ctx1 = HIDDEN_FRONT.getContext("2d");
+            const ctx = HIDDEN_FRONT.getContext("2d");
             const doCheck = (ctx, x, y)=>{
                 const img = new Image();
                 img.src = "/img/checkbox.png";
@@ -169,62 +169,37 @@ function favoriteContentListener() {
             };
             const target = ev.target;
             const checked = target.checked;
+            const checkOrClear = (x, y)=>{
+                if (checked) {
+                    doCheck(ctx, x, y);
+                } else {
+                    ctx.clearRect(x, y, 35, 35);
+                }
+            };
             switch(target.id){
-                case "contents_main":
-                    if (checked) {
-                        doCheck(ctx1, 865, 436);
-                    } else {
-                        ctx1.clearRect(865, 436, 35, 35);
-                    }
+                case "contents_1":
+                    checkOrClear(865, 436);
                     break;
-                case "contents_event":
-                    if (checked) {
-                        doCheck(ctx1, 1115, 436);
-                    } else {
-                        ctx1.clearRect(1115, 436, 35, 35);
-                    }
+                case "contents_2":
+                    checkOrClear(1115, 436);
                     break;
-                case "contents_pvp":
-                    if (checked) {
-                        doCheck(ctx1, 865, 466);
-                    } else {
-                        ctx1.clearRect(865, 466, 35, 35);
-                    }
+                case "contents_3":
+                    checkOrClear(865, 468);
                     break;
-                case "contents_daigen":
-                    if (checked) {
-                        doCheck(ctx1, 1115, 466);
-                    } else {
-                        ctx1.clearRect(1115, 466, 35, 35);
-                    }
+                case "contents_4":
+                    checkOrClear(1115, 468);
                     break;
-                case "contents_gacha":
-                    if (checked) {
-                        doCheck(ctx1, 865, 501);
-                    } else {
-                        ctx1.clearRect(865, 501, 35, 35);
-                    }
+                case "contents_5":
+                    checkOrClear(865, 502);
                     break;
-                case "contents_chara":
-                    if (checked) {
-                        doCheck(ctx1, 1115, 500);
-                    } else {
-                        ctx1.clearRect(1115, 500, 35, 35);
-                    }
+                case "contents_6":
+                    checkOrClear(1115, 502);
                     break;
-                case "contents_reiho":
-                    if (checked) {
-                        doCheck(ctx1, 865, 536);
-                    } else {
-                        ctx1.clearRect(865, 536, 35, 35);
-                    }
+                case "contents_7":
+                    checkOrClear(865, 537);
                     break;
-                case "contents_raid":
-                    if (checked) {
-                        doCheck(ctx1, 1115, 533);
-                    } else {
-                        ctx1.clearRect(1115, 533, 35, 35);
-                    }
+                case "contents_8":
+                    checkOrClear(1115, 536);
                     break;
             }
         });
@@ -455,10 +430,10 @@ function startUp() {
                     MEGIDO_TABLE.set(item.n, item.name);
                 }
                 if (item.re_n) {
-                    const opt = document.createElement("option");
-                    opt.text = item.name + " Re";
-                    opt.value = item.re_n;
-                    sel.add(opt);
+                    const opt1 = document.createElement("option");
+                    opt1.text = item.name + " Re";
+                    opt1.value = item.re_n;
+                    sel.add(opt1);
                     MEGIDO_TABLE.set(item.re_n, item.name);
                 }
             });

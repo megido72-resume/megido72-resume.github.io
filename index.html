@@ -224,8 +224,8 @@
       </div>
       <div class="col-auto mb-3">
         <div class="input-group d-flex align-items-center">
-          <label class="col-form-label me-2" for="enable_megidoral">メギドラル文字</label>
-          <input class="form-check-input me-2" type="checkbox" id="enable_megidoral" checked>
+          <label class="col-form-label me-2" for="enable_megidral">メギドラル文字</label>
+          <input class="form-check-input me-2" type="checkbox" id="enable_megidral" checked>
           <input class="form-control" type="text" id="megidral">
         </div>
       </div>
@@ -244,6 +244,41 @@
       <div class="col-auto" >
         <rgba-string-color-picker color="rgba(204, 204, 204, 0.87)" >
         </rgba-string-color-picker>
+      </div>
+    </div>
+    <div class="row mt-3 align-items-center">
+      <div class="col-auto">
+        <label class="col-form-label" for="megidral_size">メギドラル文字の大きさ</label>
+      </div>
+      <div class="col-auto">
+        <select class="form-select" id="megidral_size">
+          <option value="54">10</option>
+          <option value="50">9</option>
+          <option value="46">8</option>
+          <option value="42">7</option>
+          <option value="36">6</option>
+          <option value="32" selected>5</option>
+          <option value="29">4</option>
+          <option value="26">3</option>
+          <option value="23">2</option>
+          <option value="20">1</option>
+          <option value="17">0</option>
+        </select>
+      </div>
+    </div>
+    <div class="row mt-3 align-items-center">
+      <div class="col-auto">
+        <label class="col-form-label" for="megidral_pos">メギドラル文字の位置</label>
+      </div>
+      <div class="col-auto">
+        <select class="form-select" id="megidral_pos">
+          <option value="upper_right">右上</option>
+          <option value="upper_center">上中央</option>
+          <option value="upper_left">左上</option>
+          <option value="lower_right">右下</option>
+          <option value="lower_center">下中央</option>
+          <option value="lower_left">左下</option>
+        </select>
       </div>
     </div>
     <div class="row mt-3 align-items-center">

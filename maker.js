@@ -243,24 +243,62 @@ function drawMegidoThumb(stem) {
     });
 }
 function drawMegidoListener() {
-    async function drawMegidoral(txt) {
+    async function drawMegidral(txt) {
         const ctx = MEGIDO_OVERLAY.getContext("2d");
-        const h = 32;
         ctx.clearRect(0, 0, ctx.canvas.width, 550);
-        if (!document.querySelector("#enable_megidoral").checked) {
+        if (!document.querySelector("#enable_megidral").checked) {
             return;
         }
         const font = await new FontFace("Megidral", "url(/img/Megidral-Regular.ttf)").load();
         document.fonts.add(font);
         const color = document.querySelector("rgba-string-color-picker").color;
-        ctx.font = h + "px 'Megidral'";
-        ctx.textAlign = "right";
-        ctx.textBaseline = "top";
+        let fontSize = document.querySelector("#megidral_size").value;
+        ctx.font = fontSize + "px 'Megidral'";
+        const pos = document.querySelector("#megidral_pos").value;
+        let x, y;
+        switch(pos){
+            case "lower_left":
+                x = 11;
+                y = 538;
+                ctx.textAlign = "left";
+                ctx.textBaseline = "bottom";
+                break;
+            case "lower_right":
+                x = 538;
+                y = 538;
+                ctx.textAlign = "right";
+                ctx.textBaseline = "bottom";
+                break;
+            case "upper_left":
+                x = 11;
+                y = 11;
+                ctx.textAlign = "left";
+                ctx.textBaseline = "top";
+                break;
+            case "upper_center":
+                x = 275;
+                y = 11;
+                ctx.textAlign = "center";
+                ctx.textBaseline = "top";
+                break;
+            case "lower_center":
+                x = 275;
+                y = 538;
+                ctx.textAlign = "center";
+                ctx.textBaseline = "bottom";
+                break;
+            default:
+                x = 538;
+                y = 11;
+                ctx.textAlign = "right";
+                ctx.textBaseline = "top";
+                break;
+        }
         ctx.fillStyle = color;
-        ctx.fillText(txt, 538, 11);
+        ctx.fillText(txt, x, y);
     }
     Utils.addChangeListener("#megidral", async (target)=>{
-        await drawMegidoral(target.value);
+        await drawMegidral(target.value);
         showMegidoAsImg();
     });
     Utils.addChangeListener("#megido_image", (target)=>{
@@ -303,7 +341,7 @@ function drawMegidoListener() {
         };
         reader.readAsDataURL(fileData);
     });
-    Utils.addChangeListener("#enable_megidoral", (_)=>{
+    Utils.addChangeListener("#enable_megidral", (_)=>{
         const meg = document.querySelector("#megidral");
         meg.dispatchEvent(new Event("change"));
     });
@@ -322,7 +360,7 @@ function drawMegidoListener() {
         if (target.value) {
             const imgPromise = drawMegidoThumb(target.value);
             await Promise.all([
-                drawMegidoral(en_name),
+                drawMegidral(en_name),
                 drawMegidoName(name, true),
                 imgPromise, 
             ]);
@@ -332,6 +370,12 @@ function drawMegidoListener() {
         }
         MEGIDO_SHOW_STATE = ShowState.MegidoThumb;
         showMegidoAsImg();
+    });
+    Utils.addChangeListener("#megidral_pos", (_)=>{
+        document.querySelector("#megidral").dispatchEvent(new Event("change"));
+    });
+    Utils.addChangeListener("#megidral_size", (_)=>{
+        document.querySelector("#megidral").dispatchEvent(new Event("change"));
     });
 }
 function bottomButtonListener() {
@@ -475,4 +519,3 @@ document.addEventListener("DOMContentLoaded", ()=>{
     colorPicker();
     checkWebp("lossy");
 });
-

@@ -362,7 +362,7 @@ function drawMegidoListener() {
             await Promise.all([
                 drawMegidral(en_name),
                 drawMegidoName(name, true),
-                imgPromise, 
+                imgPromise
             ]);
         } else {
             MEGIDO_THUMB.getContext("2d")?.clearRect(0, 0, 549, 606);

@@ -474,10 +474,10 @@ function startUp() {
                     MEGIDO_TABLE.set(item.n, item.name);
                 }
                 if (item.re_n) {
-                    const opt1 = document.createElement("option");
-                    opt1.text = item.name + " Re";
-                    opt1.value = item.re_n;
-                    sel.add(opt1);
+                    const opt = document.createElement("option");
+                    opt.text = item.name + " Re";
+                    opt.value = item.re_n;
+                    sel.add(opt);
                     MEGIDO_TABLE.set(item.re_n, item.name);
                 }
             });

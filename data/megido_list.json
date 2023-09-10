@@ -790,7 +790,7 @@
       "name": "\u30c0\u30b4\u30f3",
       "num": "\u30e1\u30ae\u30c9No: \u771f-058",
       "n": "158",
-      "re_n": null
+      "re_n": "10158"
     },
     {
       "name": "\u30b9\u30b3\u30eb\u30d9\u30ce\u30c8",
@@ -904,6 +904,12 @@
       "name": "\u30f4\u30ea\u30c8\u30e9",
       "num": "\u30e1\u30ae\u30c9No: \u7d99-008",
       "n": "308",
+      "re_n": null
+    },
+    {
+      "name": "\u30d5\u30fc\u30ea\u30fc\u30c1\u30f3",
+      "num": "\u30e1\u30ae\u30c9No: \u7d99-009",
+      "n": "309",
       "re_n": null
     }
   ]

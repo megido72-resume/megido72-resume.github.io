@@ -451,12 +451,6 @@
       "re_n": null
     },
     {
-      "name": "\u30d9\u30eb\u30bc\u30d6\u30d5",
-      "num": "\u30e1\u30ae\u30c9No: \u5bb5-004",
-      "n": "204",
-      "re_n": null
-    },
-    {
       "name": "\u30ea\u30ea\u30e0",
       "num": "\u30e1\u30ae\u30c9No: \u771f-001",
       "n": "101",
@@ -886,6 +880,18 @@
       "name": "\u30b2\u30a4\u30dc\u30eb\u30b0",
       "num": "\u30e1\u30ae\u30c9No: \u771f-072",
       "n": "172",
+      "re_n": null
+    },
+    {
+      "name": "\u30ab\u30ac\u30bb\u30aa",
+      "num": "\u30e1\u30ae\u30c9No: \u7d99-001",
+      "n": "301",
+      "re_n": null
+    },
+    {
+      "name": "\u30de\u30ca\u30ca\u30f3\u30ac\u30eb",
+      "num": "\u30e1\u30ae\u30c9No: \u7d99-002",
+      "n": "302",
       "re_n": null
     },
     {
